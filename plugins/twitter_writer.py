@@ -4,7 +4,7 @@ from decouple import config
 
 TEXT='Este es un tweet de prueba'
 
-def post_tweet(text:str, image_path:str):
+def post_tweet(text:str, image_path:list[str]):
    consumer_key = config('consumer_key')
    consumer_secret = config('consumer_secret')
    access_token = config('access_token')
@@ -18,6 +18,10 @@ def post_tweet(text:str, image_path:str):
       api = tweepy.API(auth)
 
       client = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret)
+      media_id:list[str]
+      for i in range(len(image_path)):
+         media_id.append(api.media_upload(image_path[i]).media_id_string)
+         # print(media_id)
       media_id = api.media_upload(image_path).media_id_string
       # print(media_id)
       r = client.create_tweet(text=text, media_ids=[media_id])
