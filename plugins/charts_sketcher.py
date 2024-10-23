@@ -6,15 +6,18 @@ import matplotlib
 import seaborn as sns
 from datetime import datetime
 
-from plugins.seaborn_styling_func import set_seaborn_style
+from seaborn_styling_func import set_seaborn_style
 set_seaborn_style('Cambria', background_color='#242c4f', grid_color='#546476', text_color='#d7dbe3')
+
 
 today = datetime.today()
 oneyback = datetime(today.year -1, today.month, today.day).strftime('%Y-%m-%d')
 twoyback = datetime(today.year -2, today.month, today.day)
 todaystr = today.strftime('%Y-%m-%d')
 
-def request_to_dict(url:str):
+
+def request_to_dict(url:str) -> pd.DataFrame:
+    """Consumes an API with the url and creats a pandas Dataframe with that information"""
     try:
         req = requests.get(url, verify=False)
         if req.status_code == 200:
@@ -25,7 +28,8 @@ def request_to_dict(url:str):
         print(e)
 
 
-def request_to_dict_bcra(url:str):
+def request_to_dict_bcra(url:str) -> pd.DataFrame:
+    """Consumes an API with the url and creats a pandas Dataframe with that information"""
     try:
         req = requests.get(url, verify=False)
         if req.status_code == 200:
@@ -43,11 +47,11 @@ def draw_lineplot(ax:matplotlib.axes.Axes, data:pd.DataFrame, x:str, y:str, colo
 
 
 def draw_country_risk_plot():
-    #   procesing
+    # procesing
     rp_df = request_to_dict("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/")
     rp_df['fecha'] = pd.to_datetime(rp_df['fecha'], format='%Y-%m-%d')
     rp_df =rp_df[(rp_df['fecha'] < today) & (rp_df['fecha'] > oneyback)]
-    rp_df_last_value = rp_df['valor'].iloc[-1]
+    
     # plotting
     fig = plt.figure(figsize=(15,8))
     ax_rp = fig.subplots()
@@ -73,7 +77,7 @@ def draw_inflacion_plot():
         ax_men.text(row['fecha'], row['valor']/2, row['valor'], horizontalalignment='center',verticalalignment='center', weight='bold')
     ax_men.set_ylabel('Inflación Mensual (%)', fontdict={'size':12}, labelpad=10)
     ax_men.grid(True)
-    ax_men.set_title('Inflación', fontsize=34, pad=12, weight='bold')
+    ax_men.set_title('Inflación', fontsize=34, pad=10, weight='bold')
     ax_men.set_xlabel('Fecha', fontdict={'size':12}, labelpad=10)
     ax_int = ax_men.twinx()
     #Inflacion Interanual
@@ -84,7 +88,7 @@ def draw_inflacion_plot():
     fig_inf.savefig('./images/inflacion.png')
 
 
-def draw_tnadeposits_plot():
+def draw_tna_plot():
     #procesing
     tnapf = request_to_dict_bcra(f'https://api.bcra.gob.ar/estadisticas/v2.0/DatosVariable/12/{oneyback}/{todaystr}')
     tnapf['fecha'] = pd.to_datetime(tnapf['fecha'], format='%Y-%m-%d')
@@ -95,6 +99,7 @@ def draw_tnadeposits_plot():
     draw_lineplot(ax=ax_tnapf, data=tnapf,x='fecha', y='valor', color="#d0d7e0", label="TNA por depositos a 30 días en entidades financieras (BCRA)")
     #TNA Prestamos Personales
     draw_lineplot(ax=ax_tnapf, data=tnappersonales,x='fecha', y='valor', color="#7C9878", label="TNA de prestamos personales")
+    ax_tnapf.set_title('Tasa de depositos y prestamos personales', fontsize=34, pad=10, weight='bold')
     ax_tnapf.set_xlabel('Fecha', fontdict={'size':12}, labelpad=10)
     ax_tnapf.set_ylabel('')
     fig_tna.savefig('./images/tna.png')
@@ -110,6 +115,8 @@ def draw_bm_plot():
     fig_bm,ax_bm = plt.subplots(figsize=(15,8))
     ax_bm.ticklabel_format(style='plain')
     draw_lineplot(ax=ax_bm, data=base_monetaria, x="fecha", y="valor", color="#d0d7e0", label="Base monetaria")
-    draw_lineplot(ax=ax_bm, data=circulante, x="fecha", y="valor", color="#7C9878", label="Base monetaria")
-    ax_bm.set_ylabel('Millones de Pesos', fontdict={'size':12}, labelpad=10)
-    fig_bm.savefig('./images/tna.png')
+    draw_lineplot(ax=ax_bm, data=circulante, x="fecha", y="valor", color="#7C9878", label="Circulación Monetaria")
+    ax_bm.set_title('Base Monetaria en Millones de Pesos', fontsize=34, pad=12, weight='bold')
+    ax_bm.set_ylabel('')
+    ax_bm.set_xlabel('Fecha', fontdict={'size':12}, labelpad=10)
+    fig_bm.savefig('./images/bm.png')
