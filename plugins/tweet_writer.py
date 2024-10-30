@@ -3,7 +3,10 @@ from decouple import config
 from datetime import datetime
 import os
 
-today = datetime.today().strftime('%d-%m-%Y')
+today = datetime.today()
+todaystr = today.strftime('%d-%m-%Y')
+
+mes = {1: 'Diciembre', 2: 'Enero', 3: 'Febrero', 4: 'Marzo', 5: 'Abril', 6: 'Mayo', 7: 'Junio', 8: 'Julio', 9: 'Agosto', 10: 'Septiembre', 11: 'Octubre', 12: 'Noviembre'}
 
 def post_tweet(text:str, image_path:str):
     """Writtes a tweet with the text, uploads an image and posts it
@@ -31,22 +34,25 @@ def post_tweet(text:str, image_path:str):
         
         # Upload Image
         r = client.create_tweet(text=text, media_ids=[media_id])
-        print(r['id'])
+        print(r)
     except Exception as e:
         raise('Error:', e)
 
 
-def post_country_risk_plot():
-    post_tweet(text=f'Riesgo País al día: {today}', image_path='./images/rp.png')
+def post_country_risk_plot(fecha:str):
+    fecha_dt = datetime.strptime(fecha, '%d-%m-%Y')
+    valor_desde = (today - fecha_dt).days / 365
+    tweet = f"Riesgo país el día {todaystr}. {'El valor más bajo desde '+ fecha if valor_desde > 0.5 else ''}"
+    post_tweet(text=tweet, image_path='./images/rp.png')
 
 
 def post_bm_plot():
-    post_tweet(text=f'Base Monetaria y Circulación Monetaria al día: {today}', image_path='./images/bm.png')
+    post_tweet(text=f'Base Monetaria y Circulación Monetaria al día: {todaystr}', image_path='./images/bm.png')
 
 
 def post_tna_plot():
-    post_tweet(text=f'TNA al día: {today}', image_path='./images/tna.png')
+    post_tweet(text=f'TNA al día: {todaystr}', image_path='./images/tna.png')
 
 
 def post_inflacion_plot():
-    post_tweet(text=f'Inflación al día: {today}', image_path='./images/inflacion.png')
+    post_tweet(text=f'Inflación del mes de {mes[today.month]}', image_path='./images/inflacion.png')
